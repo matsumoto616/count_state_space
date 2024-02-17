@@ -33,17 +33,23 @@ class BernoulliLogisticDGLM:
         fun2 = lambda x: polygamma(1, np.exp(x[0])) + polygamma(1, np.exp(x[1]))
         fun = lambda x: [fun1(x) - f, fun2(x) - q]
 
+        jac11 = lambda x: polygamma(1, np.exp(x[0])) * np.exp(x[0])
+        jac12 = lambda x: -1 * polygamma(1, np.exp(x[1])) * np.exp(x[1])
+        jac21 = lambda x: polygamma(2, np.exp(x[0])) * np.exp(x[0])
+        jac22 = lambda x: polygamma(2, np.exp(x[1])) * np.exp(x[1])
+        jac = lambda x: [[jac11(x), jac12(x)], [jac21(x), jac22(x)]]
+
         errors = {}
-        for log_alpha0, log_beta0 in permutations(range(-10, 10), 2):
+        for log_alpha0, log_beta0 in permutations(range(-5, 5), 2):
             _f = fun1([log_alpha0, log_beta0])
             _q = fun2([log_alpha0, log_beta0])
             error = np.mean(np.abs([_f - f, _q - q]))
             errors[(log_alpha0, log_beta0)] = error
 
         x0 = min(errors, key=errors.get)
-        res = root(fun, x0=x0)
+        res = root(fun, x0=x0, jac=jac)
         return AlphaAndBeta(np.exp(res.x[0]), np.exp(res.x[1]))
-
+    
     def z_predict(self, alpha_beta: AlphaAndBeta) -> MeanAndCov:
         alpha, beta = alpha_beta.alpha, alpha_beta.beta
         z_mean = alpha / (alpha + beta)
@@ -95,13 +101,17 @@ class PoissonLoglinearDGLM:
 
         fun1 = lambda x: digamma(np.exp(x[0])) - np.log(np.exp(x[1])) - f
         fun2 = lambda x: polygamma(1, np.exp(x)) - q
+        f1prime = lambda x: -1
+        f1prime2 = lambda x: 0
+        f2prime1 = lambda x: polygamma(2, np.exp(x)) * np.exp(x)
+        f2prime2 = lambda x: polygamma(3, np.exp(x)) * np.exp(2*x) + polygamma(2, np.exp(x)) * np.exp(x)       
 
         errors = {}
         for log_alpha in range(-10, 10):
             error = np.abs(fun2(log_alpha))
             errors[log_alpha] = error
         log_alpha0 = min(errors, key=errors.get)
-        res = root_scalar(fun2, x0=log_alpha0)
+        res = root_scalar(fun2, x0=log_alpha0, fprime=f2prime1, fprime2=f2prime2)
         log_alpha = res.root
 
         errors = {}
@@ -109,7 +119,7 @@ class PoissonLoglinearDGLM:
             error = np.abs(fun1([log_alpha, log_beta0]))
             errors[log_beta0] = error
         log_beta0 = min(errors, key=errors.get)
-        res = root_scalar(lambda x: fun1([log_alpha, x]), x0=log_beta0)
+        res = root_scalar(lambda x: fun1([log_alpha, x]), x0=log_beta0, fprime=f1prime, fprime2=f1prime2)
         log_beta = res.root
 
         return AlphaAndBeta(np.exp(log_alpha), np.exp(log_beta))
