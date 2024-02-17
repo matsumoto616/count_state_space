@@ -1,12 +1,20 @@
-import numpy as np
 from dataclasses import dataclass
+
+import numpy as np
 from scipy.linalg import solve
+
 
 @dataclass
 class MeanAndCov:
     mean: np.ndarray
     cov: np.ndarray
-    
+
+
+@dataclass
+class AlphaAndBeta:
+    alpha: float
+    beta: float
+
 
 def dotdot(a, b, c):
     return np.dot(np.dot(a, b), c)
