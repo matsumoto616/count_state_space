@@ -97,6 +97,7 @@ for t in tqdm.tqdm(range(len(ys))):
         theta_pred, lambda_pred, lambda_filt, F_zero, F_plus
     )
 
+
 # %%
 fig = go.Figure()
 fig.add_trace(go.Scatter(x=ts, y=ys, name="data"))
@@ -118,7 +119,21 @@ fig.add_trace(
     go.Scatter(x=ts, y=[np.sqrt(y_filt.plus.cov) for y_filt in y_filts], name="std")
 )
 
-# fig.update_layout(
-#     yaxis_range=[0, max(ys)]
-# )
+# %%
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=ts, y=df_data["z"], name="data"))
+fig.add_trace(
+    go.Scatter(
+        x=ts,
+        y=[y_pred.zero.mean for y_pred in y_preds],
+        name="mean_pred",
+    )
+)
+fig.add_trace(
+    go.Scatter(
+        x=ts,
+        y=[y_filt.zero.mean for y_filt in y_filts],
+        name="mean_filt",
+    )
+)
 # %%
