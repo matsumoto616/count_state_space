@@ -61,7 +61,7 @@ F_plus = F0
 G_zero = G0
 G_plus = G0
 W_zero = W0
-W_plus = W0
+W_plus = W0 * 0.01
 
 #%%
 theta_zero_filt = MeanAndCov(np.ones((G_zero.shape[0], 1)), np.eye(G_zero.shape[0]))
@@ -96,17 +96,24 @@ fig.add_trace(
 fig.add_trace(
     go.Scatter(
         x=ts,
-        y=[y_filt.plus.mean * y_filt.zero.mean for y_filt in y_filts],
-        name="mean"
+        y=[y_pred.plus.mean * y_pred.zero.mean for y_pred in y_preds],
+        name="mean_pred"
     )
 )
-# fig.add_trace(
-#     go.Scatter(
-#         x=ts,
-#         y=[np.sqrt(y_pred.cov) for y_pred in y_preds],
-#         name="std"
-#     )
-# )
+fig.add_trace(
+    go.Scatter(
+        x=ts,
+        y=[y_filt.plus.mean * y_filt.zero.mean for y_filt in y_filts],
+        name="mean_filt"
+    )
+)
+fig.add_trace(
+    go.Scatter(
+        x=ts,
+        y=[np.sqrt(y_filt.plus.cov) for y_filt in y_filts],
+        name="std"
+    )
+)
 
 # fig.update_layout(
 #     yaxis_range=[0, max(ys)]

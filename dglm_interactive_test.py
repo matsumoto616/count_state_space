@@ -162,9 +162,9 @@ F0_weekly_seasonal = np.array([[1, 0, 0, 0, 0, 0]])
 F0 = make_hstack_matrix([F0_base_trend, F0_weekly_seasonal]).T # 論文の定義
 
 # ノイズの行列
-W0_base_trend = np.array([[1]])
+W0_base_trend = np.array([[0.001]])
 W0_weekly_seasonal = np.array(
-    [[ 1,  0,  0,  0,  0,  0],
+    [[ 0.001,  0,  0,  0,  0,  0],
      [  0,  0,  0,  0,  0,  0],
      [  0,  0,  0,  0,  0,  0],
      [  0,  0,  0,  0,  0,  0],
@@ -178,7 +178,7 @@ dglm = PoissonLoglinearDGLM()
 
 #%%
 ts = df_data.index
-ys = df_data["yt_weekly"]
+ys = df_data["y_raw"]
 y_preds = []
 y_filts = []
 theta_filts = []
