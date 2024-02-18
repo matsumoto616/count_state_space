@@ -6,3 +6,4 @@ plotly
 ipykernel
 pytest
 tqdm
+particles
