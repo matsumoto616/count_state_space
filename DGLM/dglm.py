@@ -56,7 +56,7 @@ class BernoulliLogisticDGLM:
         z_cov = alpha * beta / (alpha + beta) ** 2
         return MeanAndCov(z_mean, z_cov)
 
-    def lambda_filter_step(self, alpha_beta: AlphaAndBeta, z_obs: float) -> MeanAndCov:
+    def lambda_filter_step(self, alpha_beta: AlphaAndBeta, z_obs: int) -> MeanAndCov:
         alpha, beta = alpha_beta.alpha, alpha_beta.beta
         g = digamma(alpha + z_obs) - digamma(beta + 1 - z_obs)
         p = polygamma(1, alpha + z_obs) + polygamma(1, beta + 1 - z_obs)
@@ -129,7 +129,7 @@ class PoissonLoglinearDGLM:
         y_mean, y_cov = nbinom.stats(alpha, beta/(1+beta))
         return MeanAndCov(y_mean, y_cov)
 
-    def lambda_filter_step(self, alpha_beta: AlphaAndBeta, y_obs: float) -> MeanAndCov:
+    def lambda_filter_step(self, alpha_beta: AlphaAndBeta, y_obs: int) -> MeanAndCov:
         alpha, beta = alpha_beta.alpha, alpha_beta.beta
         g = digamma(alpha + y_obs) - np.log(beta + 1)
         p = polygamma(1, alpha + y_obs)

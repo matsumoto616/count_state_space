@@ -38,6 +38,15 @@ for t in tqdm.tqdm(range(len(df_data))):
     lambda_filt = dglm.lambda_filter_step(alpha_beta, zs[t])
     theta_filt = dglm.theta_filter_step(theta_pred, lambda_pred, lambda_filt, F)
 
+h = 100
+z_fores = []
+for t in tqdm.tqdm(range(h)):
+    theta_pred = dglm.theta_predict_step(theta_filt, G, W)
+    lambda_pred = dglm.lambda_predict_step(theta_pred, F)
+    alpha_beta = dglm.calc_alpha_beta(lambda_pred)
+    z_fore = dglm.z_predict(alpha_beta)
+    z_fores.append(z_fore)
+
 # %%
 fig = go.Figure()
 fig.add_trace(
@@ -98,6 +107,16 @@ for t in tqdm.tqdm(range(len(ys))):
     y_preds.append(y_pred)
     lambda_filt = dglm.lambda_filter_step(alpha_beta, ys[t])
     theta_filt = dglm.theta_filter_step(theta_pred, lambda_pred, lambda_filt, F)
+
+h = 100
+y_fores = []
+for t in tqdm.tqdm(range(h)):
+    theta_pred = dglm.theta_predict_step(theta_filt, G, W)
+    theta_filt = theta_pred
+    lambda_pred = dglm.lambda_predict_step(theta_pred, F)
+    alpha_beta = dglm.calc_alpha_beta(lambda_pred)
+    y_fore = dglm.y_predict(alpha_beta)
+    y_fores.append(y_fore)
 
 # %%
 fig = go.Figure()

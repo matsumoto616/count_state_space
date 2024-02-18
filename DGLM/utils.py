@@ -16,6 +16,18 @@ class AlphaAndBeta:
     beta: float
 
 
+@dataclass
+class ZeroAndPlus_MeanAndCov:
+    zero: MeanAndCov | None
+    plus: MeanAndCov | None
+
+
+@dataclass
+class ZeroAndPlus_AlphaAndBeta:
+    zero: AlphaAndBeta
+    plus: AlphaAndBeta
+
+
 def dotdot(a, b, c):
     return np.dot(np.dot(a, b), c)
 
