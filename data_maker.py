@@ -5,6 +5,7 @@ from plotly.subplots import make_subplots
 from scipy.optimize import minimize
 from scipy.stats import yeojohnson
 
+
 def make_weekly_data(start_date, end_date, seed=0):
     rng = np.random.default_rng(seed=seed)
 

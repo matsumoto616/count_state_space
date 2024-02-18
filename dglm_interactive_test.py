@@ -4,9 +4,14 @@ import pandas as pd
 import plotly.graph_objects as go
 import tqdm
 
-from DGLM.data_maker import make_weekly_and_yearly_data, make_weekly_data
+from data_maker import make_weekly_and_yearly_data, make_weekly_data
 from DGLM.dglm import BernoulliLogisticDGLM, PoissonLoglinearDGLM
-from DGLM.utils import MeanAndCov, make_diag_stack_matrix, make_hstack_matrix, stack_matrix
+from DGLM.utils import (
+    MeanAndCov,
+    make_diag_stack_matrix,
+    make_hstack_matrix,
+    stack_matrix,
+)
 
 # %%
 start_date = "2020-01-01"
@@ -21,7 +26,7 @@ fig.add_trace(go.Scatter(x=df_data.index, y=df_data["y_raw"]))
 # %%
 dglm = BernoulliLogisticDGLM()
 
-#%%
+# %%
 zs = df_data["z"]
 z_preds = []
 alpha_betas = []
@@ -50,47 +55,29 @@ for t in tqdm.tqdm(range(h)):
 
 # %%
 fig = go.Figure()
+fig.add_trace(go.Scatter(x=df_data.index, y=df_data["z"], name="data"))
 fig.add_trace(
-    go.Scatter(
-        x=df_data.index,
-        y=df_data["z"],
-        name="data"
-    )
+    go.Scatter(x=df_data.index, y=[z_pred.mean for z_pred in z_preds], name="mean")
 )
 fig.add_trace(
     go.Scatter(
-        x=df_data.index,
-        y=[z_pred.mean for z_pred in z_preds],
-        name="mean"
-    )
-)
-fig.add_trace(
-    go.Scatter(
-        x=df_data.index,
-        y=[np.sqrt(z_pred.cov) for z_pred in z_preds],
-        name="std"
+        x=df_data.index, y=[np.sqrt(z_pred.cov) for z_pred in z_preds], name="std"
     )
 )
 
 # %%
 fig = go.Figure()
 fig.add_trace(
-    go.Scatter(
-        x=df_data.index,
-        y=[alpha_beta.alpha for alpha_beta in alpha_betas]
-    )
+    go.Scatter(x=df_data.index, y=[alpha_beta.alpha for alpha_beta in alpha_betas])
 )
 fig.add_trace(
-    go.Scatter(
-        x=df_data.index,
-        y=[alpha_beta.beta for alpha_beta in alpha_betas]
-    )
+    go.Scatter(x=df_data.index, y=[alpha_beta.beta for alpha_beta in alpha_betas])
 )
 
-#%%
+# %%
 dglm = PoissonLoglinearDGLM()
 
-#%%
+# %%
 ts = df_data.index
 ys = df_data["yt_weekly"]
 y_preds = []
@@ -121,62 +108,50 @@ for t in tqdm.tqdm(range(h)):
 
 # %%
 fig = go.Figure()
+fig.add_trace(go.Scatter(x=ts, y=ys, name="data"))
+fig.add_trace(go.Scatter(x=ts, y=[y_pred.mean for y_pred in y_preds], name="mean"))
 fig.add_trace(
-    go.Scatter(
-        x=ts,
-        y=ys,
-        name="data"
-    )
-)
-fig.add_trace(
-    go.Scatter(
-        x=ts,
-        y=[y_pred.mean for y_pred in y_preds],
-        name="mean"
-    )
-)
-fig.add_trace(
-    go.Scatter(
-        x=ts,
-        y=[np.sqrt(y_pred.cov) for y_pred in y_preds],
-        name="std"
-    )
+    go.Scatter(x=ts, y=[np.sqrt(y_pred.cov) for y_pred in y_preds], name="std")
 )
 
 # %%
 # 状態方程式の行列
 G0_base_trend = np.array([[1]])
 G0_weekly_seasonal = np.array(
-    [[-1, -1, -1, -1, -1, -1],
-     [ 1,  0,  0,  0,  0,  0],
-     [ 0,  1,  0,  0,  0,  0],
-     [ 0,  0,  1,  0,  0,  0],
-     [ 0,  0,  0,  1,  0,  0],
-     [ 0,  0,  0,  0,  1,  0]]
+    [
+        [-1, -1, -1, -1, -1, -1],
+        [1, 0, 0, 0, 0, 0],
+        [0, 1, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 0],
+        [0, 0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 1, 0],
+    ]
 )
 G0 = make_diag_stack_matrix([G0_base_trend, G0_weekly_seasonal])
 
 # 観測方程式の行列
 F0_base_trend = np.array([[1]])
 F0_weekly_seasonal = np.array([[1, 0, 0, 0, 0, 0]])
-F0 = make_hstack_matrix([F0_base_trend, F0_weekly_seasonal]).T # 論文の定義
+F0 = make_hstack_matrix([F0_base_trend, F0_weekly_seasonal]).T  # 論文の定義
 
 # ノイズの行列
 W0_base_trend = np.array([[0.001]])
 W0_weekly_seasonal = np.array(
-    [[ 0.001,  0,  0,  0,  0,  0],
-     [  0,  0,  0,  0,  0,  0],
-     [  0,  0,  0,  0,  0,  0],
-     [  0,  0,  0,  0,  0,  0],
-     [  0,  0,  0,  0,  0,  0],
-     [  0,  0,  0,  0,  0,  0]]
+    [
+        [0.001, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0],
+    ]
 )
 W0 = make_diag_stack_matrix([W0_base_trend, W0_weekly_seasonal])
 
-#%%
+# %%
 dglm = PoissonLoglinearDGLM()
 
-#%%
+# %%
 ts = df_data.index
 ys = df_data["y_raw"]
 y_preds = []
@@ -209,56 +184,26 @@ for t in tqdm.tqdm(range(len(ys))):
 
 # %%
 fig = go.Figure()
+fig.add_trace(go.Scatter(x=ts, y=ys, name="data"))
+fig.add_trace(go.Scatter(x=ts, y=[y_filt.mean for y_filt in y_filts], name="mean_filt"))
+fig.add_trace(go.Scatter(x=ts, y=[y_pred.mean for y_pred in y_preds], name="mean_pred"))
 fig.add_trace(
-    go.Scatter(
-        x=ts,
-        y=ys,
-        name="data"
-    )
-)
-fig.add_trace(
-    go.Scatter(
-        x=ts,
-        y=[y_filt.mean for y_filt in y_filts],
-        name="mean_filt"
-    )
-)
-fig.add_trace(
-    go.Scatter(
-        x=ts,
-        y=[y_pred.mean for y_pred in y_preds],
-        name="mean_pred"
-    )
-)
-fig.add_trace(
-    go.Scatter(
-        x=ts,
-        y=[np.sqrt(y_filt.cov) for y_filt in y_filts],
-        name="std"
-    )
+    go.Scatter(x=ts, y=[np.sqrt(y_filt.cov) for y_filt in y_filts], name="std")
 )
 # %%
 fig = go.Figure()
+fig.add_trace(go.Scatter(x=ts, y=ys, name="data"))
 fig.add_trace(
     go.Scatter(
-        x=ts,
-        y=ys,
-        name="data"
+        x=ts, y=[theta_filt.mean[0, 0] for theta_filt in theta_filts], name="mean"
     )
 )
-fig.add_trace(
-    go.Scatter(
-        x=ts,
-        y=[theta_filt.mean[0, 0] for theta_filt in theta_filts],
-        name="mean"
-    )
-)
-#%%
+# %%
 dglm = BernoulliLogisticDGLM()
 
-#%%
+# %%
 ts = df_data.index
-zs = df_data["yt_weekly"].apply(lambda x:int(bool(x)))
+zs = df_data["yt_weekly"].apply(lambda x: int(bool(x)))
 z_preds = []
 z_filts = []
 theta_filts = []
@@ -281,47 +226,18 @@ for t in tqdm.tqdm(range(len(zs))):
 
 # %%
 fig = go.Figure()
+fig.add_trace(go.Scatter(x=ts, y=zs, name="data"))
+fig.add_trace(go.Scatter(x=ts, y=[z_filt.mean for z_filt in z_filts], name="mean_filt"))
+fig.add_trace(go.Scatter(x=ts, y=[z_pred.mean for z_pred in z_preds], name="mean_pred"))
 fig.add_trace(
-    go.Scatter(
-        x=ts,
-        y=zs,
-        name="data"
-    )
-)
-fig.add_trace(
-    go.Scatter(
-        x=ts,
-        y=[z_filt.mean for z_filt in z_filts],
-        name="mean_filt"
-    )
-)
-fig.add_trace(
-    go.Scatter(
-        x=ts,
-        y=[z_pred.mean for z_pred in z_preds],
-        name="mean_pred"
-    )
-)
-fig.add_trace(
-    go.Scatter(
-        x=ts,
-        y=[np.sqrt(z_filt.cov) for z_filt in z_filts],
-        name="std"
-    )
+    go.Scatter(x=ts, y=[np.sqrt(z_filt.cov) for z_filt in z_filts], name="std")
 )
 # %%
 fig = go.Figure()
+fig.add_trace(go.Scatter(x=ts, y=zs, name="data"))
 fig.add_trace(
     go.Scatter(
-        x=ts,
-        y=zs,
-        name="data"
+        x=ts, y=[theta_filt.mean[1, 0] for theta_filt in theta_filts], name="mean"
     )
 )
-fig.add_trace(
-    go.Scatter(
-        x=ts,
-        y=[theta_filt.mean[1, 0] for theta_filt in theta_filts],
-        name="mean"
-    )
-)
+# %%

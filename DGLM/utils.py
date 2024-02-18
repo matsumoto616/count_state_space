@@ -36,6 +36,7 @@ def dotdotinv(a, b, c):
     """a * b * c^{-1}, where c is symmetric positive"""
     return solve(c, np.dot(a, b).T, assume_a="pos", overwrite_b=True).T
 
+
 def make_diag_stack_matrix(matrix_list):
     """
     行列のリストから対角方向に結合した行列を作成する
@@ -48,17 +49,19 @@ def make_diag_stack_matrix(matrix_list):
     for m in matrix_list:
         for i in range(m.shape[0]):
             for j in range(m.shape[1]):
-                block_diag[pos_i+i, pos_j+j] = m[i, j]
+                block_diag[pos_i + i, pos_j + j] = m[i, j]
         pos_i += m.shape[0]
         pos_j += m.shape[1]
 
     return block_diag
+
 
 def make_hstack_matrix(matrix_list):
     """
     行列のリストから横方向に結合した行列を作成する
     """
     return np.concatenate(matrix_list, 1)
+
 
 def stack_matrix(M0, N):
     """

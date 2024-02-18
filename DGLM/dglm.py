@@ -49,7 +49,7 @@ class BernoulliLogisticDGLM:
         x0 = min(errors, key=errors.get)
         res = root(fun, x0=x0, jac=jac)
         return AlphaAndBeta(np.exp(res.x[0]), np.exp(res.x[1]))
-    
+
     def z_predict(self, alpha_beta: AlphaAndBeta) -> MeanAndCov:
         alpha, beta = alpha_beta.alpha, alpha_beta.beta
         z_mean = alpha / (alpha + beta)
@@ -104,7 +104,9 @@ class PoissonLoglinearDGLM:
         f1prime = lambda x: -1
         f1prime2 = lambda x: 0
         f2prime1 = lambda x: polygamma(2, np.exp(x)) * np.exp(x)
-        f2prime2 = lambda x: polygamma(3, np.exp(x)) * np.exp(2*x) + polygamma(2, np.exp(x)) * np.exp(x)       
+        f2prime2 = lambda x: polygamma(3, np.exp(x)) * np.exp(2 * x) + polygamma(
+            2, np.exp(x)
+        ) * np.exp(x)
 
         errors = {}
         for log_alpha0 in range(-10, 10):
@@ -119,14 +121,19 @@ class PoissonLoglinearDGLM:
             error = np.abs(fun1([log_alpha, log_beta0]))
             errors[log_beta0] = error
         log_beta0 = min(errors, key=errors.get)
-        res = root_scalar(lambda x: fun1([log_alpha, x]), x0=log_beta0, fprime=f1prime, fprime2=f1prime2)
+        res = root_scalar(
+            lambda x: fun1([log_alpha, x]),
+            x0=log_beta0,
+            fprime=f1prime,
+            fprime2=f1prime2,
+        )
         log_beta = res.root
 
         return AlphaAndBeta(np.exp(log_alpha), np.exp(log_beta))
 
     def y_predict(self, alpha_beta: AlphaAndBeta) -> MeanAndCov:
         alpha, beta = alpha_beta.alpha, alpha_beta.beta
-        y_mean, y_cov = nbinom.stats(alpha, beta/(1+beta))
+        y_mean, y_cov = nbinom.stats(alpha, beta / (1 + beta))
         return MeanAndCov(y_mean, y_cov)
 
     def lambda_filter_step(self, alpha_beta: AlphaAndBeta, y_obs: int) -> MeanAndCov:
@@ -149,4 +156,3 @@ class PoissonLoglinearDGLM:
         m = a + R @ F * (g - f) / q
         C = R - R @ F @ F.T @ R.T * (1 - p / q) / q
         return MeanAndCov(m, C)
-

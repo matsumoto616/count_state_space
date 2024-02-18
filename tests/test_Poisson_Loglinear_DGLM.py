@@ -1,9 +1,12 @@
-import pytest
-import numpy as np
-from scipy.special import digamma, polygamma
 from itertools import permutations
+
+import numpy as np
+import pytest
+from scipy.special import digamma, polygamma
+
 from DGLM.dglm import PoissonLoglinearDGLM
-from DGLM.utils import MeanAndCov, AlphaAndBeta
+from DGLM.utils import AlphaAndBeta, MeanAndCov
+
 
 class TestPoissonLoglinearDGLM:
     def test_can_run_theta_predict_step(self):
@@ -16,7 +19,7 @@ class TestPoissonLoglinearDGLM:
         theta_pred = dglm.theta_predict_step(x0, G, W)
 
         assert np.all(theta_pred.mean == np.ones(d))
-        assert np.all(theta_pred.cov == np.eye(d)*2)
+        assert np.all(theta_pred.cov == np.eye(d) * 2)
 
     def test_can_run_lambda_predict_step(self):
         d = 2
@@ -32,14 +35,14 @@ class TestPoissonLoglinearDGLM:
     def test_calc_alpha_beta(self):
         trues = np.linspace(0.1, 10, 20)
 
-        for alpha_true, beta_true, in permutations(trues, 2):
+        for (
+            alpha_true,
+            beta_true,
+        ) in permutations(trues, 2):
             f_true = digamma(alpha_true) - np.log(beta_true)
             q_true = polygamma(1, alpha_true)
 
-            y_pred = MeanAndCov(
-                np.array([[f_true]]),
-                np.array([[q_true]])
-            )
+            y_pred = MeanAndCov(np.array([[f_true]]), np.array([[q_true]]))
             dglm = PoissonLoglinearDGLM()
             alpha_beta = dglm.calc_alpha_beta(y_pred)
             alpha, beta = alpha_beta.alpha, alpha_beta.beta
@@ -52,14 +55,13 @@ class TestPoissonLoglinearDGLM:
             # assert np.isclose(q_true, q, atol=1e-3)
 
     def test_can_run_y_predict(self):
-        alpha_beta = AlphaAndBeta(1, 1)        
+        alpha_beta = AlphaAndBeta(1, 1)
         dglm = PoissonLoglinearDGLM()
         y_pred = dglm.y_predict(alpha_beta)
 
-
     def test_can_run_lambda_filter_step(self):
         alpha_beta = AlphaAndBeta(1, 1)
-        for z in [0, 1]:   
+        for z in [0, 1]:
             dglm = PoissonLoglinearDGLM()
             lambda_filt = dglm.lambda_filter_step(alpha_beta, z)
 
