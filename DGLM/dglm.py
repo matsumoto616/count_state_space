@@ -17,7 +17,7 @@ class BernoulliLogisticDGLM:
     ) -> MeanAndCov:
         m, C = theta_filt.mean, theta_filt.cov
         a = G @ m
-        R = dotdot(G.T, C, G) + W
+        R = dotdot(G, C, G.T) + W
         return MeanAndCov(a, R)
 
     def lambda_predict_step(self, theta_pred: MeanAndCov, F: np.ndarray) -> MeanAndCov:
@@ -60,7 +60,7 @@ class BernoulliLogisticDGLM:
         alpha, beta = alpha_beta.alpha, alpha_beta.beta
         g = digamma(alpha + z_obs) - digamma(beta + 1 - z_obs)
         p = polygamma(1, alpha + z_obs) + polygamma(1, beta + 1 - z_obs)
-        return MeanAndCov(g, p)
+        return MeanAndCov(np.array([[g]]), np.array([[p]]))
 
     def theta_filter_step(
         self,
@@ -87,7 +87,7 @@ class PoissonLoglinearDGLM:
     ) -> MeanAndCov:
         m, C = theta_filt.mean, theta_filt.cov
         a = G @ m
-        R = dotdot(G.T, C, G) + W
+        R = dotdot(G, C, G.T) + W
         return MeanAndCov(a, R)
 
     def lambda_predict_step(self, theta_pred: MeanAndCov, F: np.ndarray) -> MeanAndCov:
@@ -107,15 +107,15 @@ class PoissonLoglinearDGLM:
         f2prime2 = lambda x: polygamma(3, np.exp(x)) * np.exp(2*x) + polygamma(2, np.exp(x)) * np.exp(x)       
 
         errors = {}
-        for log_alpha in range(-10, 10):
-            error = np.abs(fun2(log_alpha))
-            errors[log_alpha] = error
+        for log_alpha0 in range(-10, 10):
+            error = np.abs(fun2(log_alpha0))
+            errors[log_alpha0] = error
         log_alpha0 = min(errors, key=errors.get)
         res = root_scalar(fun2, x0=log_alpha0, fprime=f2prime1, fprime2=f2prime2)
         log_alpha = res.root
 
         errors = {}
-        for log_beta0 in np.exp(range(-10, 10)):
+        for log_beta0 in range(-10, 10):
             error = np.abs(fun1([log_alpha, log_beta0]))
             errors[log_beta0] = error
         log_beta0 = min(errors, key=errors.get)
@@ -133,7 +133,7 @@ class PoissonLoglinearDGLM:
         alpha, beta = alpha_beta.alpha, alpha_beta.beta
         g = digamma(alpha + y_obs) - np.log(beta + 1)
         p = polygamma(1, alpha + y_obs)
-        return MeanAndCov(g, p)
+        return MeanAndCov(np.array([[g]]), np.array([[p]]))
 
     def theta_filter_step(
         self,
